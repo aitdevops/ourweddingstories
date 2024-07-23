@@ -35,6 +35,9 @@ jobs:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
         install_components: kubectl
 
+    - name: Configure Docker for GCP
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
     - name: Rollback deployment
       run: |
         gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GKE_REGION }} --project ${{ env.GCP_PROJECT_ID }}
