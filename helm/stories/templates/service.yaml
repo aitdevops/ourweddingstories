@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: stories
 spec:
+  type: ClusterIP
   selector:
     app: stories
   ports:

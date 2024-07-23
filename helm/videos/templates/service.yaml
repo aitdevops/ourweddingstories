@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: videos
 spec:
+  type: ClusterIP
   selector:
     app: videos
   ports:

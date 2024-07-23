@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: photos
 spec:
+  type: ClusterIP
   selector:
     app: photos
   ports:
