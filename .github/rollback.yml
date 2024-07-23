@@ -4,12 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       deployment:
-        description: 'Deployment to rollback (frontend, photos, videos, stories)'
+        description: 'Deployment name to rollback'
         required: true
         default: 'frontend'
       revision:
         description: 'Revision number to rollback to'
         required: true
+        default: '1'
 
 jobs:
   rollback:
@@ -25,7 +26,7 @@ jobs:
 
     steps:
     - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v0
+      uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 

@@ -1,79 +1,100 @@
-name: Deploy to GKE
+name: CI/CD Pipeline
 
 on:
   push:
     branches:
       - main
+    paths:
+      - 'frontend/**'
+      - 'microservices/photos/**'
+      - 'microservices/videos/**'
+      - 'microservices/stories/**'
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-
     env:
-      GKE_CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
-      GKE_REGION: ${{ secrets.GKE_REGION }}
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-      REPO_NAME: ${{ secrets.REPO_NAME }}
-      IMAGE_TAG: ${{ github.sha }}
+      IMAGE_TAG: ${{ github.run_number }}-${{ github.sha }}
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v0
+    - name: Set up Google Cloud auth
+      uses: google-github-actions/auth@v1
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
     - name: Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
-        project_id: ${{ env.GCP_PROJECT_ID }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
         install_components: kubectl
 
     - name: Configure Docker for GCP
       run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
+    - name: Filter paths
+      id: filter_paths
+      uses: dorny/paths-filter@v2
+      with:
+        filters: |
+          frontend:
+            - 'frontend/**'
+          photos:
+            - 'microservices/photos/**'
+          videos:
+            - 'microservices/videos/**'
+          stories:
+            - 'microservices/stories/**'
+
     - name: Build and push frontend image
+      if: steps.filter_paths.outputs.frontend == 'true'
       run: |
-        docker build -t us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }} -f frontend/Dockerfile ./frontend
-        docker push us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }}
+        docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }} -f frontend/Dockerfile ./frontend
+        docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }}
 
     - name: Deploy frontend to GKE
+      if: steps.filter_paths.outputs.frontend == 'true'
       run: |
-        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GKE_REGION }} --project ${{ env.GCP_PROJECT_ID }}
-        helm upgrade --install frontend ./helm/frontend --set global.repoName=us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
+        helm upgrade --install frontend ./helm/frontend --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push photos service image
+      if: steps.filter_paths.outputs.photos == 'true'
       run: |
-        docker build -t us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/photos:${{ env.IMAGE_TAG }} -f microservices/photos/Dockerfile ./microservices/photos
-        docker push us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/photos:${{ env.IMAGE_TAG }}
+        docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/photos:${{ env.IMAGE_TAG }} -f microservices/photos/Dockerfile ./microservices/photos
+        docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/photos:${{ env.IMAGE_TAG }}
 
     - name: Deploy photos service to GKE
+      if: steps.filter_paths.outputs.photos == 'true'
       run: |
-        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GKE_REGION }} --project ${{ env.GCP_PROJECT_ID }}
-        helm upgrade --install photos ./helm/photos --set global.repoName=us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
+        helm upgrade --install photos ./helm/photos --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push videos service image
+      if: steps.filter_paths.outputs.videos == 'true'
       run: |
-        docker build -t us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/videos:${{ env.IMAGE_TAG }} -f microservices/videos/Dockerfile ./microservices/videos
-        docker push us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/videos:${{ env.IMAGE_TAG }}
+        docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/videos:${{ env.IMAGE_TAG }} -f microservices/videos/Dockerfile ./microservices/videos
+        docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/videos:${{ env.IMAGE_TAG }}
 
     - name: Deploy videos service to GKE
+      if: steps.filter_paths.outputs.videos == 'true'
       run: |
-        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GKE_REGION }} --project ${{ env.GCP_PROJECT_ID }}
-        helm upgrade --install videos ./helm/videos --set global.repoName=us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
+        helm upgrade --install videos ./helm/videos --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push stories service image
+      if: steps.filter_paths.outputs.stories == 'true'
       run: |
-        docker build -t us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/stories:${{ env.IMAGE_TAG }} -f microservices/stories/Dockerfile ./microservices/stories
-        docker push us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }}/stories:${{ env.IMAGE_TAG }}
+        docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/stories:${{ env.IMAGE_TAG }} -f microservices/stories/Dockerfile ./microservices/stories
+        docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/stories:${{ env.IMAGE_TAG }}
 
     - name: Deploy stories service to GKE
+      if: steps.filter_paths.outputs.stories == 'true'
       run: |
-        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GKE_REGION }} --project ${{ env.GCP_PROJECT_ID }}
-        helm upgrade --install stories ./helm/stories --set global.repoName=us-central1-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
+        helm upgrade --install stories ./helm/stories --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Rollback on failure
       if: failure()
@@ -81,7 +102,7 @@ jobs:
         helm rollback frontend
         helm rollback photos
         helm rollback videos
-        helm rollback stories
+        helm.rollback stories
 
     - name: Manual rollback
       if: github.event.inputs.rollback == 'true'
@@ -95,7 +116,7 @@ jobs:
 
       steps:
       - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v0
+        uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
