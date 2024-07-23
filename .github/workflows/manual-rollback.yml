@@ -1,42 +1,16 @@
-name: Manual Rollback to GKE
-
+name: Trigger Manual Rollback
 on:
   workflow_dispatch:
     inputs:
-      chart_name:
-        description: 'Chart name to rollback'
+      rollback:
+        description: 'Trigger rollback'
+        required: true
+        default: 'true'
+      deployment:
+        description: 'Deployment to rollback'
         required: true
         type: string
       revision:
         description: 'Revision number to rollback to'
         required: true
         type: string
-
-jobs:
-  rollback:
-    runs-on: ubuntu-latest
-
-    env:
-      GKE_CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
-      GKE_REGION: ${{ secrets.GKE_REGION }}
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-
-    steps:
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@master
-      with:
-        version: 'latest'
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ env.GCP_PROJECT_ID }}
-
-    - name: Configure kubectl
-      run: |
-        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GKE_REGION }}
-
-    - name: Set up Helm
-      run: |
-        curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-    - name: Manual Rollback
-      run: |
-        helm rollback ${{ github.event.inputs.chart_name }} ${{ github.event.inputs.revision }}
