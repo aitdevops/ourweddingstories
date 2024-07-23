@@ -4,11 +4,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'frontend/**'
-      - 'microservices/photos/**'
-      - 'microservices/videos/**'
-      - 'microservices/stories/**'
 
 jobs:
   build:
@@ -34,64 +29,42 @@ jobs:
     - name: Configure Docker for GCP
       run: gcloud auth configure-docker us-central1-docker.pkg.dev
 
-    - name: Filter paths
-      id: filter_paths
-      uses: dorny/paths-filter@v2
-      with:
-        filters: |
-          frontend:
-            - 'frontend/**'
-          photos:
-            - 'microservices/photos/**'
-          videos:
-            - 'microservices/videos/**'
-          stories:
-            - 'microservices/stories/**'
-
     - name: Build and push frontend image
-      if: steps.filter_paths.outputs.frontend == 'true'
       run: |
         docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }} -f frontend/Dockerfile ./frontend
         docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }}
 
     - name: Deploy frontend to GKE
-      if: steps.filter_paths.outputs.frontend == 'true'
       run: |
         gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
         helm upgrade --install frontend ./helm/frontend --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push photos service image
-      if: steps.filter_paths.outputs.photos == 'true'
       run: |
         docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/photos:${{ env.IMAGE_TAG }} -f microservices/photos/Dockerfile ./microservices/photos
         docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/photos:${{ env.IMAGE_TAG }}
 
     - name: Deploy photos service to GKE
-      if: steps.filter_paths.outputs.photos == 'true'
       run: |
         gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
         helm upgrade --install photos ./helm/photos --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push videos service image
-      if: steps.filter_paths.outputs.videos == 'true'
       run: |
         docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/videos:${{ env.IMAGE_TAG }} -f microservices/videos/Dockerfile ./microservices/videos
         docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/videos:${{ env.IMAGE_TAG }}
 
     - name: Deploy videos service to GKE
-      if: steps.filter_paths.outputs.videos == 'true'
       run: |
         gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
         helm upgrade --install videos ./helm/videos --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push stories service image
-      if: steps.filter_paths.outputs.stories == 'true'
       run: |
         docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/stories:${{ env.IMAGE_TAG }} -f microservices/stories/Dockerfile ./microservices/stories
         docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/stories:${{ env.IMAGE_TAG }}
 
     - name: Deploy stories service to GKE
-      if: steps.filter_paths.outputs.stories == 'true'
       run: |
         gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
         helm upgrade --install stories ./helm/stories --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
