@@ -3,9 +3,9 @@ kind: Service
 metadata:
   name: videos
 spec:
-  type: {{ .Values.service.type }}
-  ports:
-  - port: {{ .Values.service.port }}
-    targetPort: 3002
   selector:
     app: videos
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 3002

@@ -1,10 +1,7 @@
 global:
-  repoName: "us-central1-docker.pkg.dev/${GCP_PROJECT_ID}/${REPO_NAME}"
+  repoName: ""
   tag: "latest"
 
 image:
   repository: "{{ .Values.global.repoName }}/frontend"
   tag: "{{ .Values.global.tag }}"
-service:
-  type: LoadBalancer
-  port: 80

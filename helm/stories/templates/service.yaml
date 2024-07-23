@@ -3,9 +3,9 @@ kind: Service
 metadata:
   name: stories
 spec:
-  type: {{ .Values.service.type }}
-  ports:
-  - port: {{ .Values.service.port }}
-    targetPort: 3003
   selector:
     app: stories
+  ports:
+    - protocol: TCP
+      port: 3003
+      targetPort: 3003
