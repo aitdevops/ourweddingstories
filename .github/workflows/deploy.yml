@@ -1,4 +1,4 @@
-name: Deploy to GKE
+name: CI/CD Pipeline
 
 on:
   push:
@@ -19,12 +19,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@master
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
       with:
-        version: 'latest'
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        project_id: ${{ env.GCP_PROJECT_ID }}
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        install_components: kubectl
+
+    - name: Configure Docker for GCP
+      run: gcloud auth configure-docker us-docker.pkg.dev
 
     - name: Configure kubectl
       run: |
