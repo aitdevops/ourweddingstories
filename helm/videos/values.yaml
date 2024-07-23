@@ -1,7 +1,3 @@
-global:
-  repoName: ""
-  tag: "latest"
-
 image:
-  repository: "{{ .Values.global.repoName }}/videos"
-  tag: "{{ .Values.global.tag }}"
+  repository: "us-central1-docker.pkg.dev/aitdevops8/ourweddingstories/videos"
+  tag: "latest"
