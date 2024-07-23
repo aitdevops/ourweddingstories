@@ -1,0 +1,3 @@
+global:
+  repoName: "your-docker-repo"
+  tag: "latest"

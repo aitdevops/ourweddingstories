@@ -1,0 +1,6 @@
+image:
+  repository: "{{ .Values.global.repoName }}/videos"
+  tag: "{{ .Values.global.tag }}"
+service:
+  type: LoadBalancer
+  port: 3002

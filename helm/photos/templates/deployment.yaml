@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: photos
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: photos
+  template:
+    metadata:
+      labels:
+        app: photos
+    spec:
+      containers:
+      - name: photos
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: 3001

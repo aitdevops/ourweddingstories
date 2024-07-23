@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stories
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stories
+  template:
+    metadata:
+      labels:
+        app: stories
+    spec:
+      containers:
+      - name: stories
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: 3003
