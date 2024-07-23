@@ -1,3 +1,0 @@
-global:
-  repoName: "us-central1-docker.pkg.dev/${GCP_PROJECT_ID}/${REPO_NAME}"
-  tag: "latest"
