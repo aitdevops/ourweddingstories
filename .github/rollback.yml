@@ -1,0 +1,41 @@
+name: Manual Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment:
+        description: 'Deployment to rollback (frontend, photos, videos, stories)'
+        required: true
+        default: 'frontend'
+      revision:
+        description: 'Revision number to rollback to'
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+
+    env:
+      GKE_CLUSTER_NAME: ${{ secrets.GKE_CLUSTER_NAME }}
+      GKE_REGION: ${{ secrets.GKE_REGION }}
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      ROLLBACK_DEPLOYMENT: ${{ github.event.inputs.deployment }}
+      ROLLBACK_REVISION: ${{ github.event.inputs.revision }}
+
+    steps:
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v0
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+        install_components: kubectl
+
+    - name: Rollback deployment
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER_NAME }} --region ${{ env.GKE_REGION }} --project ${{ env.GCP_PROJECT_ID }}
+        helm rollback ${{ env.ROLLBACK_DEPLOYMENT }} ${{ env.ROLLBACK_REVISION }}
