@@ -2,6 +2,7 @@
 FROM node:14-alpine as build
 WORKDIR /app
 COPY package.json ./
+COPY webpack.config.js ./
 RUN npm install
 COPY . .
 RUN npm run build
