@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
-import { getPhotos, getVideos, getStories } from './services/photos';
+import { getPhotos } from './services/photos';
+import { getVideos } from './services/videos';  // Corrected import
+import { getStories } from './services/stories';  // Corrected import
 
 const App = () => {
   const [photos, setPhotos] = useState(null);
