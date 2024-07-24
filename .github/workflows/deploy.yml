@@ -31,13 +31,13 @@ jobs:
 
     - name: Build and push frontend image
       run: |
-        docker build --no-cache -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }} -f frontend/Dockerfile ./frontend
+        docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }} -f frontend/Dockerfile ./frontend
         docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend:${{ env.IMAGE_TAG }}
 
     - name: Deploy frontend to GKE
       run: |
         gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
-        helm upgrade --install frontend ./helm/frontend --set image.repository=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/frontend --set image.tag=${{ env.IMAGE_TAG }}
+        helm upgrade --install frontend ./helm/frontend --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push photos service image
       run: |
@@ -46,7 +46,8 @@ jobs:
 
     - name: Deploy photos service to GKE
       run: |
-        helm upgrade --install photos ./helm/photos --set image.repository=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/photos --set image.tag=${{ env.IMAGE_TAG }}
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
+        helm upgrade --install photos ./helm/photos --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push videos service image
       run: |
@@ -55,7 +56,8 @@ jobs:
 
     - name: Deploy videos service to GKE
       run: |
-        helm upgrade --install videos ./helm/videos --set image.repository=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/videos --set image.tag=${{ env.IMAGE_TAG }}
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
+        helm upgrade --install videos ./helm/videos --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
 
     - name: Build and push stories service image
       run: |
@@ -64,4 +66,5 @@ jobs:
 
     - name: Deploy stories service to GKE
       run: |
-        helm upgrade --install stories ./helm/stories --set image.repository=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }}/stories --set image.tag=${{ env.IMAGE_TAG }}
+        gcloud container clusters get-credentials ${{ secrets.GKE_CLUSTER_NAME }} --region ${{ secrets.GKE_REGION }} --project ${{ secrets.GCP_PROJECT_ID }}
+        helm upgrade --install stories ./helm/stories --set global.repoName=us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.REPO_NAME }} --set global.tag=${{ env.IMAGE_TAG }}
